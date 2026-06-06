@@ -1,0 +1,15 @@
+# Phrases to locate in the source recording.
+# Each entry becomes one output clip when a match is found.
+#
+# id:        stable filename stem for the exported clip
+# text:      phrase to search for (case-insensitive substring match)
+# padding_ms: extra audio before/after the matched segment
+
+phrases:
+  - id: intro
+    text: "welcome to the show"
+    padding_ms: 250
+
+  - id: outro
+    text: "thanks for listening"
+    padding_ms: 500

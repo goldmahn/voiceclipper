@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voiceclipper"
+version = "0.1.0"
+description = "Detect predetermined phrases in audio recordings and export each as a separate WAV clip."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "goldmahn" }]
+dependencies = [
+    "faster-whisper>=1.1.0",
+    "pydub>=0.25.1",
+    "PyYAML>=6.0.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+voiceclipper = "voiceclipper.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
