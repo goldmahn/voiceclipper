@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from voiceclipper import __version__
-from voiceclipper.config import ClipJob, load_phrases
+from voiceclipper.config import ClipJob, ProcessingConfig, load_phrases
 from voiceclipper.pipeline import run_clip_job
 
 
@@ -47,6 +47,76 @@ def build_parser() -> argparse.ArgumentParser:
         default="int8",
         help="faster-whisper compute type (default: int8)",
     )
+
+    proc = parser.add_argument_group("audio processing (off by default)")
+    proc.add_argument(
+        "--process",
+        action="store_true",
+        default=False,
+        help="Enable the full audio processing chain on each clip",
+    )
+    proc.add_argument(
+        "--no-noise-reduction",
+        action="store_true",
+        default=False,
+        help="Disable spectral noise reduction (default: enabled when --process is set)",
+    )
+    proc.add_argument(
+        "--no-compression",
+        action="store_true",
+        default=False,
+        help="Disable dynamic range compression (default: enabled when --process is set)",
+    )
+    proc.add_argument(
+        "--highpass-hz",
+        type=int,
+        default=80,
+        metavar="HZ",
+        help="High-pass filter cutoff in Hz (default: 80)",
+    )
+    proc.add_argument(
+        "--presence-gain-db",
+        type=float,
+        default=2.5,
+        metavar="DB",
+        help="Presence boost gain in dB around --presence-hz (default: 2.5)",
+    )
+    proc.add_argument(
+        "--presence-hz",
+        type=int,
+        default=3000,
+        metavar="HZ",
+        help="Center frequency for presence EQ boost in Hz (default: 3000)",
+    )
+    proc.add_argument(
+        "--compression-ratio",
+        type=float,
+        default=3.0,
+        metavar="RATIO",
+        help="Compression ratio, e.g. 3.0 means 3:1 (default: 3.0)",
+    )
+    proc.add_argument(
+        "--compression-threshold",
+        type=float,
+        default=-18.0,
+        metavar="DB",
+        help="Compression threshold in dBFS (default: -18.0)",
+    )
+    proc.add_argument(
+        "--peak-limit",
+        type=float,
+        default=-1.0,
+        metavar="DBTP",
+        help="True-peak limiter ceiling in dBTP (default: -1.0)",
+    )
+    proc.add_argument(
+        "--target-lufs",
+        type=float,
+        default=-16.0,
+        metavar="LUFS",
+        help="Target integrated loudness in LUFS; pass 0 to skip normalization (default: -16.0)",
+    )
+
     return parser
 
 
@@ -60,6 +130,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
+    processing: ProcessingConfig | None = None
+    if args.process:
+        processing = ProcessingConfig(
+            noise_reduction=not args.no_noise_reduction,
+            highpass_hz=args.highpass_hz,
+            presence_gain_db=args.presence_gain_db,
+            presence_hz=args.presence_hz,
+            compression=not args.no_compression,
+            compression_ratio=args.compression_ratio,
+            compression_threshold_db=args.compression_threshold,
+            peak_limit_dbtp=args.peak_limit,
+            target_lufs=None if args.target_lufs == 0 else args.target_lufs,
+        )
+
     job = ClipJob(
         input_path=args.input,
         output_dir=args.output_dir,
@@ -67,6 +151,7 @@ def main(argv: list[str] | None = None) -> int:
         whisper_model=args.model,
         device=args.device,
         compute_type=args.compute_type,
+        processing=processing,
     )
 
     try:

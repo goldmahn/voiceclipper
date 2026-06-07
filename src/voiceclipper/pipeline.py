@@ -34,7 +34,7 @@ def run_clip_job(job: ClipJob) -> PipelineResult:
     )
     matches = find_phrase_matches(job.phrases, segments)
 
-    exported_paths = export_clips(job.input_path, matches, job.output_dir)
+    exported_paths = export_clips(job.input_path, matches, job.output_dir, job.processing)
     clips = [
         ClipResult(match=match, output_path=path)
         for match, path in zip(matches, exported_paths, strict=True)
