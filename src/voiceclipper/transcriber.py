@@ -7,7 +7,7 @@ from faster_whisper import WhisperModel
 
 
 @dataclass(frozen=True)
-class TranscriptSegment:
+class TranscriptWord:
     text: str
     start: float
     end: float
@@ -19,21 +19,24 @@ def transcribe(
     model_name: str = "base",
     device: str = "cpu",
     compute_type: str = "int8",
-) -> list[TranscriptSegment]:
+) -> list[TranscriptWord]:
     model = WhisperModel(model_name, device=device, compute_type=compute_type)
-    segments, _info = model.transcribe(str(audio_path), word_timestamps=False)
+    segments, _info = model.transcribe(str(audio_path), word_timestamps=True)
 
-    results: list[TranscriptSegment] = []
+    words: list[TranscriptWord] = []
     for segment in segments:
-        text = segment.text.strip()
-        if not text:
+        if segment.words is None:
             continue
-        results.append(
-            TranscriptSegment(
-                text=text,
-                start=float(segment.start),
-                end=float(segment.end),
+        for word in segment.words:
+            text = word.word.strip()
+            if not text:
+                continue
+            words.append(
+                TranscriptWord(
+                    text=text,
+                    start=float(word.start),
+                    end=float(word.end),
+                )
             )
-        )
 
-    return results
+    return words

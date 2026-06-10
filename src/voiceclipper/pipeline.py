@@ -26,15 +26,15 @@ def run_clip_job(job: ClipJob) -> PipelineResult:
     if not job.input_path.exists():
         raise FileNotFoundError(f"Input audio not found: {job.input_path}")
 
-    segments = transcribe(
+    words = transcribe(
         job.input_path,
         model_name=job.whisper_model,
         device=job.device,
         compute_type=job.compute_type,
     )
-    matches = find_phrase_matches(job.phrases, segments)
+    matches = find_phrase_matches(job.phrases, words)
 
-    exported_paths = export_clips(job.input_path, matches, job.output_dir)
+    exported_paths = export_clips(job.input_path, words, matches, job.output_dir)
     clips = [
         ClipResult(match=match, output_path=path)
         for match, path in zip(matches, exported_paths, strict=True)

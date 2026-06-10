@@ -79,11 +79,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     for clip in result.clips:
-        segment = clip.match.segment
         print(
             f"saved {clip.output_path} "
             f"({clip.match.start_ms}-{clip.match.end_ms} ms) "
-            f"from segment: {segment.text!r}"
+            f"matched: {clip.match.matched_text!r}"
         )
 
     if result.missing_phrase_ids:
