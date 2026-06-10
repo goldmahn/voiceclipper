@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -14,6 +14,19 @@ class PhraseTarget:
 
 
 @dataclass(frozen=True)
+class ProcessingConfig:
+    noise_reduction: bool = True
+    highpass_hz: int = 80
+    presence_gain_db: float = 2.5
+    presence_hz: int = 3000
+    compression: bool = True
+    compression_ratio: float = 3.0
+    compression_threshold_db: float = -18.0
+    peak_limit_dbtp: float = -1.0
+    target_lufs: float | None = -16.0
+
+
+@dataclass(frozen=True)
 class ClipJob:
     input_path: Path
     output_dir: Path
@@ -21,10 +34,17 @@ class ClipJob:
     whisper_model: str = "base"
     device: str = "cpu"
     compute_type: str = "int8"
+    processing: ProcessingConfig | None = None
+    min_confidence: float = 1.0
+    diarize: bool = False
+    hf_token: str | None = None
 
 
 def load_phrases(path: Path) -> list[PhraseTarget]:
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        raise ValueError(f"Failed to parse {path}: {exc}") from exc
     if not isinstance(data, dict) or "phrases" not in data:
         raise ValueError(f"{path} must contain a top-level 'phrases' list")
 

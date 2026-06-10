@@ -5,7 +5,7 @@ from pathlib import Path
 
 from voiceclipper.clipper import export_clips
 from voiceclipper.config import ClipJob
-from voiceclipper.detector import PhraseMatch, find_phrase_matches
+from voiceclipper.detector import PhraseMatch, SpeakerSegment, find_phrase_matches
 from voiceclipper.transcriber import transcribe
 
 
@@ -32,9 +32,22 @@ def run_clip_job(job: ClipJob) -> PipelineResult:
         device=job.device,
         compute_type=job.compute_type,
     )
-    matches = find_phrase_matches(job.phrases, segments)
 
-    exported_paths = export_clips(job.input_path, matches, job.output_dir)
+    diarization: list[SpeakerSegment] | None = None
+    if job.diarize:
+        if not job.hf_token:
+            raise ValueError("--hf-token is required when --diarize is set")
+        from voiceclipper.diarizer import diarize
+        diarization = diarize(job.input_path, job.hf_token)
+
+    matches = find_phrase_matches(
+        job.phrases,
+        segments,
+        diarization=diarization,
+        min_confidence=job.min_confidence,
+    )
+
+    exported_paths = export_clips(job.input_path, matches, job.output_dir, job.processing)
     clips = [
         ClipResult(match=match, output_path=path)
         for match, path in zip(matches, exported_paths, strict=True)
