@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--session-id`, `--manifest-only`, and backward-compatible `voiceclipper file.mp3` shorthand.
 - ffmpeg-based clip export to avoid loading entire recordings into RAM.
 - Transcript cache for fast re-clipping when `phrases.yaml` changes.
+- Full Corpus Voces phrase list (100 lines) in `phrases.example.yaml`.
+- `scripts/run-monitored.sh` for resource logging and macOS completion notifications.
+- Cursor project rule for monitored runs on Ginnungagap.
 
 ### Changed
 

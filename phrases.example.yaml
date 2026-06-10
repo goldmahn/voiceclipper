@@ -1,9 +1,9 @@
-# Target phrases for Voiceclipper v1.
+# Corpus Voces phrase list (100 lines).
 # Each entry becomes one output clip when a match is found in the recording.
 #
 # id:         stable filename stem for the exported clip
-# text:       phrase to search for (case-insensitive substring match)
-# padding_ms: extra audio before/after the matched segment
+# text:       phrase to search for (case-insensitive word sequence match)
+# padding_ms: extra audio before/after the matched words (into pauses only)
 
 phrases:
   - id: who_sent_you
@@ -44,4 +44,364 @@ phrases:
 
   - id: keep_voice_down
     text: "Keep your voice down."
+    padding_ms: 250
+
+  - id: youre_hiding_something
+    text: "You're hiding something."
+    padding_ms: 250
+
+  - id: dont_lie_to_me_again
+    text: "Don't lie to me again."
+    padding_ms: 250
+
+  - id: i_know_what_i_saw
+    text: "I know what I saw."
+    padding_ms: 250
+
+  - id: something_isnt_right_here
+    text: "Something isn't right here."
+    padding_ms: 250
+
+  - id: why_are_you_really_here
+    text: "Why are you really here?"
+    padding_ms: 250
+
+  - id: you_expect_me_to_believe_that
+    text: "You expect me to believe that?"
+    padding_ms: 250
+
+  - id: ive_been_fooled_before
+    text: "I've been fooled before."
+    padding_ms: 250
+
+  - id: stay_where_i_can_see_you
+    text: "Stay where I can see you."
+    padding_ms: 250
+
+  - id: i_dont_trust_your_kind
+    text: "I don't trust your kind."
+    padding_ms: 250
+
+  - id: tell_me_the_truth
+    text: "Tell me the truth."
+    padding_ms: 250
+
+  - id: put_the_blade_down
+    text: "Put the blade down."
+    padding_ms: 250
+
+  - id: dangerous_mistake
+    text: "You're making a dangerous mistake."
+    padding_ms: 250
+
+  - id: walk_away_while_you_can
+    text: "Walk away while you still can."
+    padding_ms: 250
+
+  - id: i_warned_you_once_already
+    text: "I warned you once already."
+    padding_ms: 250
+
+  - id: try_that_again
+    text: "Try that again and see what happens."
+    padding_ms: 250
+
+  - id: youre_not_in_control
+    text: "You're not in control here."
+    padding_ms: 250
+
+  - id: one_last_chance
+    text: "I'll give you one last chance."
+    padding_ms: 250
+
+  - id: nobody_leaves_until_i_say_so
+    text: "Nobody leaves until I say so."
+    padding_ms: 250
+
+  - id: you_should_be_afraid
+    text: "You should be afraid."
+    padding_ms: 250
+
+  - id: dont_test_my_patience
+    text: "Don't test my patience."
+    padding_ms: 250
+
+  - id: please_dont_leave_me_here
+    text: "Please don't leave me here."
+    padding_ms: 250
+
+  - id: did_you_hear_that
+    text: "Did you hear that?"
+    padding_ms: 250
+
+  - id: its_getting_closer
+    text: "It's getting closer."
+    padding_ms: 250
+
+  - id: we_need_to_move_now
+    text: "We need to move. Now."
+    padding_ms: 250
+
+  - id: i_cant_do_this_anymore
+    text: "I can't do this anymore."
+    padding_ms: 250
+
+  - id: something_followed_us
+    text: "Something followed us."
+    padding_ms: 250
+
+  - id: were_going_to_die_here
+    text: "We're going to die here."
+    padding_ms: 250
+
+  - id: keep_the_lights_on
+    text: "Keep the lights on."
+    padding_ms: 250
+
+  - id: dont_let_it_touch_you
+    text: "Don't let it touch you."
+    padding_ms: 250
+
+  - id: i_thought_we_were_safe
+    text: "I thought we were safe."
+    padding_ms: 250
+
+  - id: i_need_a_moment
+    text: "I need a moment."
+    padding_ms: 250
+
+  - id: it_hurts_to_breathe
+    text: "It hurts to breathe."
+    padding_ms: 250
+
+  - id: help_me_stand
+    text: "Help me stand."
+    padding_ms: 250
+
+  - id: lost_too_much_blood
+    text: "I've lost too much blood."
+    padding_ms: 250
+
+  - id: just_keep_moving
+    text: "Just keep moving."
+    padding_ms: 250
+
+  - id: im_tired_so_tired
+    text: "I'm tired... so tired."
+    padding_ms: 250
+
+  - id: leave_me_behind
+    text: "Leave me behind."
+    padding_ms: 250
+
+  - id: i_can_still_fight
+    text: "I can still fight."
+    padding_ms: 250
+
+  - id: dont_look_at_the_wound
+    text: "Don't look at the wound."
+    padding_ms: 250
+
+  - id: this_isnt_over_yet
+    text: "This isn't over yet."
+    padding_ms: 250
+
+  - id: we_can_make_a_deal
+    text: "We can make a deal."
+    padding_ms: 250
+
+  - id: theres_another_way
+    text: "There's another way."
+    padding_ms: 250
+
+  - id: hear_me_out_first
+    text: "Hear me out first."
+    padding_ms: 250
+
+  - id: what_would_it_take_to_convince_you
+    text: "What would it take to convince you?"
+    padding_ms: 250
+
+  - id: nobody_has_to_get_hurt
+    text: "Nobody has to get hurt."
+    padding_ms: 250
+
+  - id: lets_be_reasonable
+    text: "Let's be reasonable."
+    padding_ms: 250
+
+  - id: i_can_pay_you_double
+    text: "I can pay you double."
+    padding_ms: 250
+
+  - id: think_carefully_before_you_answer
+    text: "Think carefully before you answer."
+    padding_ms: 250
+
+  - id: you_need_me_alive
+    text: "You need me alive."
+    padding_ms: 250
+
+  - id: were_both_trying_to_survive
+    text: "We're both trying to survive."
+    padding_ms: 250
+
+  - id: smarter_than_the_others
+    text: "You're smarter than the others."
+    padding_ms: 250
+
+  - id: i_knew_i_could_trust_you
+    text: "I knew I could trust you."
+    padding_ms: 250
+
+  - id: you_have_excellent_taste
+    text: "You have excellent taste."
+    padding_ms: 250
+
+  - id: come_closer
+    text: "Come closer."
+    padding_ms: 250
+
+  - id: help_one_another
+    text: "Surely we can help one another."
+    padding_ms: 250
+
+  - id: you_seem_different_somehow
+    text: "You seem different somehow."
+    padding_ms: 250
+
+  - id: missed_talking_to_someone_like_you
+    text: "I've missed talking to someone like you."
+    padding_ms: 250
+
+  - id: relax_youre_safe_with_me
+    text: "Relax. You're safe with me."
+    padding_ms: 250
+
+  - id: no_reason_to_be_nervous
+    text: "There's no reason to be nervous."
+    padding_ms: 250
+
+  - id: you_want_this_too
+    text: "You want this just as much as I do."
+    padding_ms: 250
+
+  - id: hold_the_line
+    text: "Hold the line!"
+    padding_ms: 250
+
+  - id: nobody_breaks_formation
+    text: "Nobody breaks formation."
+    padding_ms: 250
+
+  - id: listen_carefully
+    text: "Listen carefully."
+    padding_ms: 250
+
+  - id: this_is_an_order
+    text: "This is an order."
+    padding_ms: 250
+
+  - id: stay_focused
+    text: "Stay focused."
+    padding_ms: 250
+
+  - id: we_move_at_dawn
+    text: "We move at dawn."
+    padding_ms: 250
+
+  - id: protect_the_civilians_first
+    text: "Protect the civilians first."
+    padding_ms: 250
+
+  - id: you_know_your_duty
+    text: "You know your duty."
+    padding_ms: 250
+
+  - id: we_finish_this_together
+    text: "We finish this together."
+    padding_ms: 250
+
+  - id: stand_your_ground
+    text: "Stand your ground."
+    padding_ms: 250
+
+  - id: they_deserved_better
+    text: "They deserved better than this."
+    padding_ms: 250
+
+  - id: i_should_have_stopped_it
+    text: "I should have stopped it."
+    padding_ms: 250
+
+  - id: everything_changed_that_day
+    text: "Everything changed that day."
+    padding_ms: 250
+
+  - id: i_still_remember_their_face
+    text: "I still remember their face."
+    padding_ms: 250
+
+  - id: nothing_feels_real_anymore
+    text: "Nothing feels real anymore."
+    padding_ms: 250
+
+  - id: i_never_wanted_this
+    text: "I never wanted this."
+    padding_ms: 250
+
+  - id: some_wounds_never_heal
+    text: "Some wounds never heal."
+    padding_ms: 250
+
+  - id: we_were_supposed_to_save_them
+    text: "We were supposed to save them."
+    padding_ms: 250
+
+  - id: i_thought_i_had_more_time
+    text: "I thought I had more time."
+    padding_ms: 250
+
+  - id: i_dont_know_who_i_am_anymore
+    text: "I don't know who I am anymore."
+    padding_ms: 250
+
+  - id: scent_of_fear_tonight
+    text: "The scent of fear is strong tonight."
+    padding_ms: 250
+
+  - id: your_heartbeat_has_changed
+    text: "Your heartbeat has changed."
+    padding_ms: 250
+
+  - id: tunnels_remember_your_footsteps
+    text: "The tunnels remember your footsteps."
+    padding_ms: 250
+
+  - id: we_do_not_speak_that_name_here
+    text: "We do not speak that name here."
+    padding_ms: 250
+
+  - id: hunger_never_truly_leaves
+    text: "The hunger never truly leaves."
+    padding_ms: 250
+
+  - id: you_carry_death_on_your_skin
+    text: "You carry death on your skin."
+    padding_ms: 250
+
+  - id: the_air_tastes_wrong
+    text: "The air tastes wrong."
+    padding_ms: 250
+
+  - id: something_ancient_is_waking
+    text: "Something ancient is waking beneath us."
+    padding_ms: 250
+
+  - id: your_kind_not_meant_to_come_here
+    text: "Your kind was not meant to come here."
+    padding_ms: 250
+
+  - id: the_dark_is_listening
+    text: "The dark is listening."
     padding_ms: 250

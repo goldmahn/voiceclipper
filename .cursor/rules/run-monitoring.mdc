@@ -1,0 +1,46 @@
+---
+description: Monitor Ginnungagap resources during Voiceclipper runs and notify when done
+alwaysApply: true
+---
+
+# Voiceclipper run monitoring (Ginnungagap)
+
+When running Voiceclipper on Ginnungagap (M1 Mac mini, 16 GB RAM) — especially long or test sessions — do all of the following unless the user opts out:
+
+## Before starting
+
+1. Prefer `scripts/run-monitored.sh` when running from terminal, or replicate its behavior when invoking Voiceclipper directly.
+2. Place the resource log beside the session output, e.g. `corpus/sessions/<session_id>/resource.log`.
+3. Tell the user the log path and that a macOS notification will fire when the run completes.
+
+## During the run
+
+- Sample every **5 seconds**: timestamp, `memory_pressure` (system-wide), and RSS for `voiceclipper`/Python/Whisper-related processes.
+- Run Voiceclipper in the foreground; keep monitoring in a background shell until the job exits.
+- If memory pressure reaches **warn** or **critical**, note it in chat when the run finishes.
+
+## After the run
+
+1. Append a short summary to the log: exit code, clips exported (from manifest if present), elapsed time.
+2. Send a **macOS Notification Center** alert:
+
+```bash
+osascript -e 'display notification "MESSAGE" with title "Voiceclipper" sound name "Glass"'
+```
+
+3. Post a Cursor chat summary with: success/failure, clip count, log path, any memory warnings.
+
+## Notifications the user can expect
+
+| Channel | How |
+|---------|-----|
+| macOS banner | `osascript display notification` (works when Ginnungagap is awake) |
+| Cursor chat | Agent message when the monitored run completes |
+| Log file | `resource.log` next to the session for later review |
+
+There is no push notification to iPhone unless the user sets that up separately (e.g. Pushover, email on script completion).
+
+## Long recordings
+
+- Close heavy apps before multi-hour runs when possible.
+- After the run, verify `manifest.json` exists and check `missing_phrase_ids`.

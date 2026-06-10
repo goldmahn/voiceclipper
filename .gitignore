@@ -12,5 +12,9 @@ venv/
 .pytest_cache/
 .mypy_cache/
 output/
+corpus/
+samples/*
+!samples/.gitkeep
+phrases.yaml
 *.wav
 !tests/fixtures/*.wav

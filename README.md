@@ -134,6 +134,16 @@ phrases:
 pytest
 ```
 
+## Monitored runs (Ginnungagap)
+
+For long sessions, use the resource logger and macOS notification wrapper:
+
+```bash
+./scripts/run-monitored.sh --notify \
+  --log corpus/sessions/my_session/resource.log \
+  -- voiceclipper clip recording.mp3 --phrases phrases.yaml --output-dir corpus/sessions
+```
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
