@@ -8,6 +8,8 @@ from voiceclipper import __version__
 from voiceclipper.config import ClipJob, ProcessingConfig, load_phrases
 from voiceclipper.pipeline import run_clip_job
 
+_AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".flac", ".ogg", ".aac", ".opus", ".wma"}
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -18,7 +20,20 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    parser.add_argument("input", type=Path, help="Path to the source audio file")
+
+    # --- inputs ---
+    parser.add_argument(
+        "input",
+        type=Path,
+        nargs="*",
+        help="One or more source audio files. Omit when using --input-dir.",
+    )
+    parser.add_argument(
+        "--input-dir",
+        type=Path,
+        metavar="DIR",
+        help="Process all audio files in this directory.",
+    )
     parser.add_argument(
         "--phrases",
         type=Path,
@@ -31,6 +46,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("output"),
         help="Directory for exported WAV clips (default: output)",
     )
+
+    # --- transcription ---
     parser.add_argument(
         "--model",
         default="base",
@@ -48,6 +65,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="faster-whisper compute type (default: int8)",
     )
 
+    # --- matching ---
+    match_grp = parser.add_argument_group("phrase matching")
+    match_grp.add_argument(
+        "--min-confidence",
+        type=float,
+        default=1.0,
+        metavar="0-1",
+        help=(
+            "Minimum match confidence for fuzzy matching (default: 1.0 = exact substring). "
+            "Lower values allow near-matches, e.g. 0.8."
+        ),
+    )
+
+    # --- audio processing ---
     proc = parser.add_argument_group("audio processing (off by default)")
     proc.add_argument(
         "--process",
@@ -59,13 +90,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-noise-reduction",
         action="store_true",
         default=False,
-        help="Disable spectral noise reduction (default: enabled when --process is set)",
+        help="Disable spectral noise reduction",
     )
     proc.add_argument(
         "--no-compression",
         action="store_true",
         default=False,
-        help="Disable dynamic range compression (default: enabled when --process is set)",
+        help="Disable dynamic range compression",
     )
     proc.add_argument(
         "--highpass-hz",
@@ -79,7 +110,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=2.5,
         metavar="DB",
-        help="Presence boost gain in dB around --presence-hz (default: 2.5)",
+        help="Presence boost gain in dB (default: 2.5)",
     )
     proc.add_argument(
         "--presence-hz",
@@ -93,7 +124,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=3.0,
         metavar="RATIO",
-        help="Compression ratio, e.g. 3.0 means 3:1 (default: 3.0)",
+        help="Compression ratio (default: 3.0)",
     )
     proc.add_argument(
         "--compression-threshold",
@@ -114,20 +145,58 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=-16.0,
         metavar="LUFS",
-        help="Target integrated loudness in LUFS; pass 0 to skip normalization (default: -16.0)",
+        help="Target integrated loudness in LUFS; pass 0 to skip (default: -16.0)",
+    )
+
+    # --- diarization ---
+    diar = parser.add_argument_group("speaker diarization (requires voiceclipper[diarize])")
+    diar.add_argument(
+        "--diarize",
+        action="store_true",
+        default=False,
+        help="Run speaker diarization and label each clip with the dominant speaker",
+    )
+    diar.add_argument(
+        "--hf-token",
+        metavar="TOKEN",
+        help="HuggingFace access token (required when --diarize is set)",
     )
 
     return parser
+
+
+def _collect_inputs(args: argparse.Namespace, parser: argparse.ArgumentParser) -> list[Path]:
+    inputs: list[Path] = list(args.input or [])
+    if args.input_dir:
+        if not args.input_dir.is_dir():
+            parser.error(f"--input-dir is not a directory: {args.input_dir}")
+        inputs += sorted(
+            p for p in args.input_dir.iterdir() if p.suffix.lower() in _AUDIO_EXTENSIONS
+        )
+    if not inputs:
+        parser.error("provide at least one input file or use --input-dir")
+    return inputs
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    inputs = _collect_inputs(args, parser)
+    is_batch = len(inputs) > 1
+
     try:
         phrases = load_phrases(args.phrases)
     except (OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    if args.diarize and not args.hf_token:
+        print("error: --hf-token is required when --diarize is set", file=sys.stderr)
+        return 1
+
+    if args.min_confidence < 0.0 or args.min_confidence > 1.0:
+        print("error: --min-confidence must be between 0.0 and 1.0", file=sys.stderr)
         return 1
 
     processing: ProcessingConfig | None = None
@@ -144,44 +213,70 @@ def main(argv: list[str] | None = None) -> int:
             target_lufs=None if args.target_lufs == 0 else args.target_lufs,
         )
 
-    job = ClipJob(
-        input_path=args.input,
-        output_dir=args.output_dir,
-        phrases=phrases,
-        whisper_model=args.model,
-        device=args.device,
-        compute_type=args.compute_type,
-        processing=processing,
-    )
+    any_clips = False
+    exit_code = 0
 
-    try:
-        result = run_clip_job(job)
-    except FileNotFoundError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    except Exception as exc:  # pragma: no cover - surfaced to CLI users
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
+    for input_path in inputs:
+        output_dir = args.output_dir / input_path.stem if is_batch else args.output_dir
 
-    for clip in result.clips:
-        segment = clip.match.segment
-        print(
-            f"saved {clip.output_path} "
-            f"({clip.match.start_ms}-{clip.match.end_ms} ms) "
-            f"from segment: {segment.text!r}"
+        job = ClipJob(
+            input_path=input_path,
+            output_dir=output_dir,
+            phrases=phrases,
+            whisper_model=args.model,
+            device=args.device,
+            compute_type=args.compute_type,
+            processing=processing,
+            min_confidence=args.min_confidence,
+            diarize=args.diarize,
+            hf_token=args.hf_token,
         )
 
-    if result.missing_phrase_ids:
-        print(
-            "warning: no match found for: " + ", ".join(result.missing_phrase_ids),
-            file=sys.stderr,
-        )
+        prefix = f"[{input_path.name}] " if is_batch else ""
 
-    if not result.clips:
+        try:
+            result = run_clip_job(job)
+        except FileNotFoundError as exc:
+            print(f"{prefix}error: {exc}", file=sys.stderr)
+            exit_code = 1
+            continue
+        except Exception as exc:
+            print(f"{prefix}error: {exc}", file=sys.stderr)
+            exit_code = 1
+            continue
+
+        for clip in result.clips:
+            segment = clip.match.segment
+            confidence_note = (
+                f" (confidence: {clip.match.confidence:.0%})"
+                if args.min_confidence < 1.0
+                else ""
+            )
+            speaker_note = f" [{clip.match.speaker}]" if clip.match.speaker else ""
+            print(
+                f"{prefix}saved {clip.output_path} "
+                f"({clip.match.start_ms}-{clip.match.end_ms} ms)"
+                f"{speaker_note}"
+                f"{confidence_note} "
+                f"from segment: {segment.text!r}"
+            )
+            any_clips = True
+
+        if result.missing_phrase_ids:
+            print(
+                f"{prefix}warning: no match found for: "
+                + ", ".join(result.missing_phrase_ids),
+                file=sys.stderr,
+            )
+
+        if not result.clips:
+            exit_code = 1
+
+    if not any_clips:
         print("error: no phrase matches found; no clips were exported", file=sys.stderr)
         return 1
 
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":

@@ -27,7 +27,10 @@ def export_clips(
         clip = audio[match.start_ms : match.end_ms]
         if chain is not None:
             clip = chain.process(clip)
-        destination = output_dir / f"{match.phrase.id}.wav"
+        stem = match.phrase.id
+        if match.speaker:
+            stem = f"{stem}_{match.speaker}"
+        destination = output_dir / f"{stem}.wav"
         clip.export(destination, format="wav")
         exported.append(destination)
 

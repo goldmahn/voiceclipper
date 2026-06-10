@@ -35,6 +35,9 @@ class ClipJob:
     device: str = "cpu"
     compute_type: str = "int8"
     processing: ProcessingConfig | None = None
+    min_confidence: float = 1.0
+    diarize: bool = False
+    hf_token: str | None = None
 
 
 def load_phrases(path: Path) -> list[PhraseTarget]:
