@@ -8,6 +8,7 @@ from voiceclipper.boundaries import clip_boundaries
 from voiceclipper.detector import PhraseMatch
 from voiceclipper.ffmpeg_io import export_clip_ffmpeg, probe_duration_ms
 from voiceclipper.manifest import ClipEntry, clip_filename
+from voiceclipper.metadata import content_metadata_to_dict
 from voiceclipper.transcriber import TranscriptWord
 
 if TYPE_CHECKING:
