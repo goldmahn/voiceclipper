@@ -9,6 +9,8 @@ Voiceclipper reviews audio recordings, locates predetermined phrases, and export
 3. Sets clip boundaries from word timestamps, extending only into neighboring pauses (not across adjacent speech).
 4. Exports clips with **ffmpeg** (no full-file decode in RAM).
 5. Writes one WAV per matched utterance, a per-session **`manifest.json`**, and a cached **`transcript.words.json`** for fast re-runs.
+6. Runs **LUFS Buff** to normalize loudness into `normalized_clips/`.
+7. Runs **Corpus Finisher** to pad and finalize clips into `training_clips/`.
 
 Repeated phrases are numbered: `who_sent_you.wav`, `who_sent_you1.wav`, …
 
@@ -16,6 +18,7 @@ Repeated phrases are numbered: `who_sent_you.wav`, `who_sent_you1.wav`, …
 
 - Python 3.11+
 - [ffmpeg](https://ffmpeg.org/) and **ffprobe** on your `PATH`
+- [Node.js](https://nodejs.org/) 18+ with **LUFS Buff](../lufs-buff) and [Corpus Finisher](../corpus-finisher) available (sibling projects, `PATH`, or `LUFS_BUFF_CLI` / `CORPUS_FINISHER_CLI`)
 
 On macOS with Homebrew:
 
@@ -60,10 +63,17 @@ Output layout:
 corpus/sessions/session_001/
 ├── manifest.json
 ├── transcript.words.json
-└── clips/
-    ├── who_sent_you.wav
-    └── …
+├── clips/                 # raw phrase extracts (VoiceClipper)
+├── normalized_clips/      # loudness-normalized (LUFS Buff)
+├── training_clips/        # padded + faded for model training (Corpus Finisher)
+└── reports/
+    ├── qc-report.json
+    └── finalize-report.json
 ```
+
+By default, VoiceClipper automatically runs **LUFS Buff** and **Corpus Finisher** after clip export. Use `--no-postprocess` to export clips only.
+
+Repeated phrases are numbered: `who_sent_you.wav`, `who_sent_you1.wav`, …
 
 ### Batch (many recordings)
 
@@ -97,6 +107,67 @@ voiceclipper clip recordings/session_001.mp3 \
 | `--compute-type` | `int8` | Quantization (good default on Apple Silicon) |
 | `--session-id` | input filename stem | Output subdirectory name |
 | `--manifest-only` | off | Reuse cached transcript; re-export clips/manifest |
+| `--no-postprocess` | off | Skip LUFS Buff and Corpus Finisher |
+| `--target-lufs` | `-23` | Target integrated loudness for LUFS Buff |
+| `--pad` | `75` | Leading/trailing training padding (ms) |
+| `--fade` | `3` | Edge fade duration (ms); use `0` to disable |
+| `--metadata` | off | JSON file with speaker and session metadata |
+| `--interactive-metadata` | off | Prompt for speaker and session metadata before processing |
+
+## Metadata capture
+
+VoiceClipper owns metadata capture for the Corpus Voces pipeline. Downstream tools inherit the session manifest rather than asking the same questions again.
+
+Three layers are supported:
+
+1. **Speaker metadata** — identity, consent, language, vocal notes
+2. **Session metadata** — recording date, room, microphone, device, notes
+3. **Clip/content metadata** — optional per-phrase fields in `phrases.yaml`
+
+### Interactive metadata
+
+```bash
+voiceclipper clip recordings/test.m4a \
+  --phrases phrases.yaml \
+  --output-dir corpus/sessions \
+  --interactive-metadata
+```
+
+### Metadata JSON
+
+Load speaker and session fields from a JSON file:
+
+```bash
+voiceclipper clip recordings/test.m4a \
+  --phrases phrases.yaml \
+  --output-dir corpus/sessions \
+  --metadata metadata/example_session.json
+```
+
+If both `--metadata` and `--interactive-metadata` are supplied, JSON loads first and prompts fill or override missing values.
+
+See [`metadata/example_session.json`](metadata/example_session.json) for a starter template.
+
+### Phrase content metadata
+
+Optional per-phrase metadata in `phrases.yaml`:
+
+```yaml
+phrases:
+  - id: close_the_door
+    text: "Close the door."
+    padding_ms: 250
+    metadata:
+      species: human
+      situation: warning
+      emotion: tense
+      intensity: 3
+      character_archetype: guard
+      delivery_style: controlled
+      context_notes: "A wary guard trying not to alarm the others."
+```
+
+Repeated clips inherit the same phrase metadata automatically. Phrase files without a `metadata` block continue to work unchanged.
 
 ## Long recordings on Apple Silicon
 
@@ -111,7 +182,31 @@ For very long files, `--model tiny` trades accuracy for speed.
 
 ## Manifest
 
-Each session writes `manifest.json` (schema v1) describing the source file, phrase config, every exported clip (`clip_id`, timestamps, paths), and missing phrase ids. Downstream tools (for example an audio cleaner) should read manifests rather than re-parsing YAML.
+Each session writes `manifest.json` (schema v2) describing:
+
+- speaker metadata
+- session metadata
+- source file and phrase config
+- every exported clip with timestamps, paths, and optional `content_metadata`
+- processing history for VoiceClipper, LUFS Buff, and Corpus Finisher
+
+Post-process QC reports also preserve speaker/session metadata and attach clip content metadata to per-clip report entries.
+
+## Corpus Voces pipeline
+
+```text
+source recording
+  → VoiceClipper (clips/)
+  → LUFS Buff (normalized_clips/)
+  → Corpus Finisher (training_clips/)
+```
+
+VoiceClipper orchestrates the downstream Node stages with explicit session paths. Override tool locations with:
+
+```bash
+export LUFS_BUFF_CLI="node ../lufs-buff/src/cli.js"
+export CORPUS_FINISHER_CLI="node ../corpus-finisher/src/cli.js"
+```
 
 ## Phrase configuration
 

@@ -49,6 +49,40 @@ def _add_shared_args(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Reuse cached transcript.words.json and re-export clips/manifest only",
     )
+    parser.add_argument(
+        "--no-postprocess",
+        action="store_true",
+        help="Skip LUFS Buff and Corpus Finisher after clip export",
+    )
+    parser.add_argument(
+        "--target-lufs",
+        type=float,
+        default=-23.0,
+        help="Target integrated loudness for LUFS Buff (default: -23)",
+    )
+    parser.add_argument(
+        "--pad",
+        type=int,
+        default=75,
+        help="Leading and trailing training padding in ms (default: 75)",
+    )
+    parser.add_argument(
+        "--fade",
+        type=int,
+        default=3,
+        help="Edge fade duration in ms for Corpus Finisher (default: 3, 0 to disable)",
+    )
+    parser.add_argument(
+        "--metadata",
+        type=Path,
+        default=None,
+        help="Optional JSON file with speaker and session metadata",
+    )
+    parser.add_argument(
+        "--interactive-metadata",
+        action="store_true",
+        help="Prompt for speaker and session metadata before processing",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -96,6 +130,43 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _clip_job_kwargs(args: argparse.Namespace, phrases_path: Path, phrases: list) -> dict:
+    return {
+        "phrases_path": phrases_path,
+        "phrases": phrases,
+        "session_id": args.session_id,
+        "whisper_model": args.model,
+        "device": args.device,
+        "compute_type": args.compute_type,
+        "manifest_only": args.manifest_only,
+        "run_postprocess": not args.no_postprocess,
+        "target_lufs": args.target_lufs,
+        "leading_pad_ms": args.pad,
+        "trailing_pad_ms": args.pad,
+        "fade_ms": args.fade,
+        "metadata_path": args.metadata,
+        "interactive_metadata": args.interactive_metadata,
+    }
+
+
+def _print_postprocess_results(postprocess) -> None:
+    print(f"normalized: {postprocess.normalized_dir}")
+    print(f"training: {postprocess.training_dir}")
+    print(f"reports: {postprocess.reports_dir}")
+    print(
+        "lufs-buff: "
+        f"PASS={postprocess.lufs.pass_count}, "
+        f"REVIEW={postprocess.lufs.review}, "
+        f"REJECT={postprocess.lufs.reject}"
+    )
+    print(
+        "corpus-finisher: "
+        f"PASS={postprocess.finalize.pass_count}, "
+        f"REVIEW={postprocess.finalize.review}, "
+        f"REJECT={postprocess.finalize.reject}"
+    )
+
+
 def _print_clip_results(result: PipelineResult) -> None:
     for clip in result.clips:
         exported = clip.entry
@@ -108,6 +179,9 @@ def _print_clip_results(result: PipelineResult) -> None:
 
     print(f"manifest: {result.manifest_path}")
 
+    if result.postprocess is not None:
+        _print_postprocess_results(result.postprocess)
+
     if result.missing_phrase_ids:
         print(
             "warning: no match found for: " + ", ".join(result.missing_phrase_ids),
@@ -119,13 +193,7 @@ def _run_clip(args: argparse.Namespace, phrases_path: Path, phrases: list) -> in
     job = ClipJob(
         input_path=args.input,
         output_dir=args.output_dir,
-        phrases_path=phrases_path,
-        phrases=phrases,
-        session_id=args.session_id,
-        whisper_model=args.model,
-        device=args.device,
-        compute_type=args.compute_type,
-        manifest_only=args.manifest_only,
+        **_clip_job_kwargs(args, phrases_path, phrases),
     )
 
     try:
@@ -160,6 +228,13 @@ def _run_batch(args: argparse.Namespace, phrases_path: Path, phrases: list) -> i
             fail_fast=args.fail_fast,
             index_path=args.index,
             manifest_only=args.manifest_only,
+            run_postprocess=not args.no_postprocess,
+            target_lufs=args.target_lufs,
+            leading_pad_ms=args.pad,
+            trailing_pad_ms=args.pad,
+            fade_ms=args.fade,
+            metadata_path=args.metadata,
+            interactive_metadata=args.interactive_metadata,
         )
     except (FileNotFoundError, NotADirectoryError) as exc:
         print(f"error: {exc}", file=sys.stderr)

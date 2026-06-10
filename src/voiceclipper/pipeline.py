@@ -16,6 +16,8 @@ from voiceclipper.transcript_cache import (
     save_transcript_cache,
     transcript_cache_path,
 )
+from voiceclipper.metadata import collect_corpus_metadata
+from voiceclipper.postprocess import PostProcessResult, run_postprocess
 from voiceclipper.util import sanitize_session_id
 
 
@@ -38,6 +40,7 @@ class PipelineResult:
     clips: list[ClipResult]
     missing_phrase_ids: list[str]
     skipped: bool = False
+    postprocess: PostProcessResult | None = None
 
 
 def resolve_session_paths(job: ClipJob) -> tuple[str, Path, Path]:
@@ -52,6 +55,12 @@ def run_clip_job(job: ClipJob, *, model: WhisperModel | None = None) -> Pipeline
         raise FileNotFoundError(f"Input audio not found: {job.input_path}")
 
     session_id, session_dir, clips_dir = resolve_session_paths(job)
+    corpus_metadata = collect_corpus_metadata(
+        session_id=session_id,
+        source_path=job.input_path,
+        metadata_path=job.metadata_path,
+        interactive=job.interactive_metadata,
+    )
     cache_path = transcript_cache_path(session_dir)
 
     words = load_transcript_cache(cache_path)
@@ -95,11 +104,25 @@ def run_clip_job(job: ClipJob, *, model: WhisperModel | None = None) -> Pipeline
         word_count=len(words),
         missing_phrase_ids=missing,
         clips=[item.entry for item in exported],
+        session_metadata=dict(corpus_metadata.session),
+        speaker_metadata=dict(corpus_metadata.speaker),
     )
 
     manifest_path = session_dir / "manifest.json"
     if job.write_manifest:
         write_manifest(manifest_path, manifest)
+
+    postprocess: PostProcessResult | None = None
+    if job.run_postprocess and clips:
+        postprocess = run_postprocess(
+            session_dir,
+            clips_dir,
+            manifest_path=manifest_path,
+            target_lufs=job.target_lufs,
+            leading_pad_ms=job.leading_pad_ms,
+            trailing_pad_ms=job.trailing_pad_ms,
+            fade_ms=job.fade_ms,
+        )
 
     return PipelineResult(
         session_id=session_id,
@@ -109,4 +132,5 @@ def run_clip_job(job: ClipJob, *, model: WhisperModel | None = None) -> Pipeline
         matches=matches,
         clips=clips,
         missing_phrase_ids=missing,
+        postprocess=postprocess,
     )
