@@ -72,6 +72,17 @@ def _add_shared_args(parser: argparse.ArgumentParser) -> None:
         default=3,
         help="Edge fade duration in ms for Corpus Finisher (default: 3, 0 to disable)",
     )
+    parser.add_argument(
+        "--metadata",
+        type=Path,
+        default=None,
+        help="Optional JSON file with speaker and session metadata",
+    )
+    parser.add_argument(
+        "--interactive-metadata",
+        action="store_true",
+        help="Prompt for speaker and session metadata before processing",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -133,6 +144,8 @@ def _clip_job_kwargs(args: argparse.Namespace, phrases_path: Path, phrases: list
         "leading_pad_ms": args.pad,
         "trailing_pad_ms": args.pad,
         "fade_ms": args.fade,
+        "metadata_path": args.metadata,
+        "interactive_metadata": args.interactive_metadata,
     }
 
 
@@ -220,6 +233,8 @@ def _run_batch(args: argparse.Namespace, phrases_path: Path, phrases: list) -> i
             leading_pad_ms=args.pad,
             trailing_pad_ms=args.pad,
             fade_ms=args.fade,
+            metadata_path=args.metadata,
+            interactive_metadata=args.interactive_metadata,
         )
     except (FileNotFoundError, NotADirectoryError) as exc:
         print(f"error: {exc}", file=sys.stderr)

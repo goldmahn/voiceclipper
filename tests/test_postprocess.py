@@ -25,6 +25,18 @@ def test_run_postprocess_runs_both_stages(tmp_path: Path) -> None:
     clips_dir = session_dir / "clips"
     clips_dir.mkdir(parents=True)
     (clips_dir / "phrase.wav").write_bytes(b"wav")
+    manifest_path = session_dir / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 2,
+                "session": {"session_id": "session_test"},
+                "speaker": {"speaker_id": "speaker_test"},
+                "clips": [{"filename": "phrase.wav", "clip_id": "clip_1", "phrase_id": "phrase"}],
+            }
+        ),
+        encoding="utf-8",
+    )
 
     reports_dir = session_dir / "reports"
     reports_dir.mkdir(parents=True)
@@ -62,7 +74,7 @@ def test_run_postprocess_runs_both_stages(tmp_path: Path) -> None:
             ["corpus-finisher"],
         ]
         with patch("voiceclipper.postprocess.subprocess.run", side_effect=fake_run):
-            result = run_postprocess(session_dir, clips_dir)
+            result = run_postprocess(session_dir, clips_dir, manifest_path=manifest_path)
 
     assert isinstance(result, PostProcessResult)
     assert result.normalized_dir == session_dir / "normalized_clips"
@@ -78,7 +90,7 @@ def test_run_postprocess_requires_clips(tmp_path: Path) -> None:
     clips_dir.mkdir(parents=True)
 
     with pytest.raises(ValueError, match="No WAV clips"):
-        run_postprocess(session_dir, clips_dir)
+        run_postprocess(session_dir, clips_dir, manifest_path=session_dir / "manifest.json")
 
 
 def test_run_postprocess_surfaces_stage_failure(tmp_path: Path) -> None:
@@ -86,6 +98,8 @@ def test_run_postprocess_surfaces_stage_failure(tmp_path: Path) -> None:
     clips_dir = session_dir / "clips"
     clips_dir.mkdir(parents=True)
     (clips_dir / "phrase.wav").write_bytes(b"wav")
+    manifest_path = session_dir / "manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
 
     with patch("voiceclipper.postprocess.resolve_node_cli", return_value=["lufs-buff"]):
         with patch(
@@ -93,4 +107,4 @@ def test_run_postprocess_surfaces_stage_failure(tmp_path: Path) -> None:
             return_value=CompletedProcess(args=[], returncode=1, stdout="", stderr="boom"),
         ):
             with pytest.raises(RuntimeError, match="LUFS Buff failed"):
-                run_postprocess(session_dir, clips_dir)
+                run_postprocess(session_dir, clips_dir, manifest_path=manifest_path)

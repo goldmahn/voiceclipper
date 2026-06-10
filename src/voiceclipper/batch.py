@@ -62,6 +62,8 @@ def run_batch(
     leading_pad_ms: int = 75,
     trailing_pad_ms: int = 75,
     fade_ms: int = 3,
+    metadata_path: Path | None = None,
+    interactive_metadata: bool = False,
 ) -> BatchResult:
     if not input_dir.is_dir():
         raise NotADirectoryError(f"Batch input is not a directory: {input_dir}")
@@ -109,6 +111,8 @@ def run_batch(
             leading_pad_ms=leading_pad_ms,
             trailing_pad_ms=trailing_pad_ms,
             fade_ms=fade_ms,
+            metadata_path=metadata_path,
+            interactive_metadata=interactive_metadata,
         )
 
         try:

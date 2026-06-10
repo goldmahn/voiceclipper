@@ -1,0 +1,26 @@
+{
+  "speaker": {
+    "speaker_name": "Ariel Goldman",
+    "speaker_id": "speaker_ariel_001",
+    "speaker_display_name": "Ariel",
+    "consent_status": "owned/self-recorded",
+    "consent_version": "internal-v1",
+    "age_range": "",
+    "native_language": "English",
+    "accent_or_dialect": "General American",
+    "vocal_notes": ""
+  },
+  "session": {
+    "session_id": "session_001",
+    "recording_date": "2026-06-10",
+    "recording_location_type": "home office",
+    "room_description": "small office, carpeted floor",
+    "microphone": "iPhone built-in mic",
+    "recorder_device": "iPhone 15 Pro",
+    "recording_distance": "arm's length",
+    "recording_position": "phone on table",
+    "background_noise": "none noticeable",
+    "source_audio_filename": "Voiceover test 2.m4a",
+    "recording_notes": ""
+  }
+}

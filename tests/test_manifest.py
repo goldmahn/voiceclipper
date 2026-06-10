@@ -34,6 +34,8 @@ def test_build_manifest_and_is_current(tmp_path: Path) -> None:
         word_count=3,
         missing_phrase_ids=[],
         clips=[clip],
+        session_metadata={"session_id": "session_001", "source_audio_filename": "source.mp3"},
+        speaker_metadata={"speaker_id": "speaker_session_001", "speaker_name": ""},
     )
 
     manifest_path = tmp_path / "manifest.json"

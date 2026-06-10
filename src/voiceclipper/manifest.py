@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
 from voiceclipper import __version__
+from voiceclipper.metadata import content_metadata_to_dict
 from voiceclipper.util import file_sha256
 
 
-MANIFEST_VERSION = 1
+MANIFEST_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -25,11 +26,16 @@ class ClipEntry:
     duration_ms: int
     word_start_index: int
     word_end_index: int
+    phrase_text: str = ""
+    start: float = 0.0
+    end: float = 0.0
+    content_metadata: dict[str, object] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
 class SessionManifest:
     manifest_version: int
+    schema_version: int
     tool: str
     tool_version: str
     created_at: str
@@ -40,11 +46,20 @@ class SessionManifest:
     stats: dict[str, int]
     missing_phrase_ids: list[str]
     clips: list[ClipEntry]
+    session: dict[str, object]
+    speaker: dict[str, object]
+    processing: dict[str, object]
 
     def to_dict(self) -> dict[str, object]:
         payload = asdict(self)
-        payload["clips"] = [asdict(clip) for clip in self.clips]
+        payload["clips"] = [clip_to_dict(clip) for clip in self.clips]
         return payload
+
+
+def clip_to_dict(clip: ClipEntry) -> dict[str, object]:
+    payload = asdict(clip)
+    payload["content_metadata"] = content_metadata_to_dict(clip.content_metadata)
+    return payload
 
 
 def build_manifest(
@@ -59,13 +74,17 @@ def build_manifest(
     word_count: int,
     missing_phrase_ids: list[str],
     clips: list[ClipEntry],
+    session_metadata: dict[str, object],
+    speaker_metadata: dict[str, object],
 ) -> SessionManifest:
     matched_types = {clip.phrase_id for clip in clips}
+    completed_at = datetime.now(UTC).isoformat()
     return SessionManifest(
         manifest_version=MANIFEST_VERSION,
+        schema_version=MANIFEST_VERSION,
         tool="voiceclipper",
         tool_version=__version__,
-        created_at=datetime.now(UTC).isoformat(),
+        created_at=completed_at,
         session_id=session_id,
         source={
             "path": str(source_path),
@@ -90,6 +109,16 @@ def build_manifest(
         },
         missing_phrase_ids=missing_phrase_ids,
         clips=clips,
+        session=session_metadata,
+        speaker=speaker_metadata,
+        processing={
+            "voiceclipper": {
+                "version": __version__,
+                "completed_at": completed_at,
+                "source_audio": str(source_path),
+                "phrases_file": str(phrases_path),
+            }
+        },
     )
 
 

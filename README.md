@@ -111,6 +111,63 @@ voiceclipper clip recordings/session_001.mp3 \
 | `--target-lufs` | `-23` | Target integrated loudness for LUFS Buff |
 | `--pad` | `75` | Leading/trailing training padding (ms) |
 | `--fade` | `3` | Edge fade duration (ms); use `0` to disable |
+| `--metadata` | off | JSON file with speaker and session metadata |
+| `--interactive-metadata` | off | Prompt for speaker and session metadata before processing |
+
+## Metadata capture
+
+VoiceClipper owns metadata capture for the Corpus Voces pipeline. Downstream tools inherit the session manifest rather than asking the same questions again.
+
+Three layers are supported:
+
+1. **Speaker metadata** — identity, consent, language, vocal notes
+2. **Session metadata** — recording date, room, microphone, device, notes
+3. **Clip/content metadata** — optional per-phrase fields in `phrases.yaml`
+
+### Interactive metadata
+
+```bash
+voiceclipper clip recordings/test.m4a \
+  --phrases phrases.yaml \
+  --output-dir corpus/sessions \
+  --interactive-metadata
+```
+
+### Metadata JSON
+
+Load speaker and session fields from a JSON file:
+
+```bash
+voiceclipper clip recordings/test.m4a \
+  --phrases phrases.yaml \
+  --output-dir corpus/sessions \
+  --metadata metadata/example_session.json
+```
+
+If both `--metadata` and `--interactive-metadata` are supplied, JSON loads first and prompts fill or override missing values.
+
+See [`metadata/example_session.json`](metadata/example_session.json) for a starter template.
+
+### Phrase content metadata
+
+Optional per-phrase metadata in `phrases.yaml`:
+
+```yaml
+phrases:
+  - id: close_the_door
+    text: "Close the door."
+    padding_ms: 250
+    metadata:
+      species: human
+      situation: warning
+      emotion: tense
+      intensity: 3
+      character_archetype: guard
+      delivery_style: controlled
+      context_notes: "A wary guard trying not to alarm the others."
+```
+
+Repeated clips inherit the same phrase metadata automatically. Phrase files without a `metadata` block continue to work unchanged.
 
 ## Long recordings on Apple Silicon
 
@@ -125,7 +182,15 @@ For very long files, `--model tiny` trades accuracy for speed.
 
 ## Manifest
 
-Each session writes `manifest.json` (schema v1) describing the source file, phrase config, every exported clip (`clip_id`, timestamps, paths), and missing phrase ids. Post-process QC reports live in `reports/`.
+Each session writes `manifest.json` (schema v2) describing:
+
+- speaker metadata
+- session metadata
+- source file and phrase config
+- every exported clip with timestamps, paths, and optional `content_metadata`
+- processing history for VoiceClipper, LUFS Buff, and Corpus Finisher
+
+Post-process QC reports also preserve speaker/session metadata and attach clip content metadata to per-clip report entries.
 
 ## Corpus Voces pipeline
 

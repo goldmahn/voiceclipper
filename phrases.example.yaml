@@ -21,6 +21,14 @@ phrases:
   - id: close_the_door
     text: "Close the door behind you."
     padding_ms: 250
+    metadata:
+      species: human
+      situation: warning
+      emotion: tense
+      intensity: 3
+      character_archetype: guard
+      delivery_style: controlled
+      context_notes: "A wary guard trying not to alarm the others."
 
   - id: waiting_for_hours
     text: "We've been waiting for hours."

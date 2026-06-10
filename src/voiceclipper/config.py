@@ -6,11 +6,15 @@ from pathlib import Path
 import yaml
 
 
+from voiceclipper.metadata import parse_phrase_content_metadata
+
+
 @dataclass(frozen=True)
 class PhraseTarget:
     id: str
     text: str
     padding_ms: int = 250
+    content_metadata: dict[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -30,6 +34,8 @@ class ClipJob:
     leading_pad_ms: int = 75
     trailing_pad_ms: int = 75
     fade_ms: int = 3
+    metadata_path: Path | None = None
+    interactive_metadata: bool = False
 
 
 def load_phrases(path: Path) -> list[PhraseTarget]:
@@ -51,11 +57,16 @@ def load_phrases(path: Path) -> list[PhraseTarget]:
         if not isinstance(padding_ms, int) or padding_ms < 0:
             raise ValueError(f"phrase #{index} padding_ms must be a non-negative integer")
 
+        content_metadata = None
+        if "metadata" in entry:
+            content_metadata = parse_phrase_content_metadata(entry.get("metadata"))
+
         phrases.append(
             PhraseTarget(
                 id=str(phrase_id),
                 text=str(text),
                 padding_ms=padding_ms,
+                content_metadata=content_metadata,
             )
         )
 

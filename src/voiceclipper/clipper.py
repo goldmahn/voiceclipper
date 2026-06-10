@@ -49,6 +49,8 @@ def export_clips(
 
         export_clip_ffmpeg(audio_path, output_path, clip_start, clip_end)
 
+        content_metadata = content_metadata_to_dict(match.phrase.content_metadata or {})
+
         entry = ClipEntry(
             clip_id=f"{session_id}_{sequence:06d}",
             phrase_id=match.phrase.id,
@@ -61,6 +63,10 @@ def export_clips(
             duration_ms=clip_end - clip_start,
             word_start_index=match.start_word_index,
             word_end_index=match.end_word_index,
+            phrase_text=match.phrase.text,
+            start=round(clip_start / 1000, 3),
+            end=round(clip_end / 1000, 3),
+            content_metadata=content_metadata,
         )
         exported.append(ExportedClip(entry=entry, output_path=output_path))
 
