@@ -106,11 +106,9 @@ voiceclipper/
 pytest
 ```
 
-## Roadmap
+## Changelog
 
-- Fuzzy matching and confidence thresholds
-- Batch processing for multiple source files
-- Optional speaker diarization before clipping
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
