@@ -19,9 +19,10 @@ def transcribe(
     model_name: str = "base",
     device: str = "cpu",
     compute_type: str = "int8",
+    model: WhisperModel | None = None,
 ) -> list[TranscriptWord]:
-    model = WhisperModel(model_name, device=device, compute_type=compute_type)
-    segments, _info = model.transcribe(str(audio_path), word_timestamps=True)
+    whisper_model = model or WhisperModel(model_name, device=device, compute_type=compute_type)
+    segments, _info = whisper_model.transcribe(str(audio_path), word_timestamps=True)
 
     words: list[TranscriptWord] = []
     for segment in segments:

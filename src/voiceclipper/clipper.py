@@ -1,34 +1,39 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
-
-from pydub import AudioSegment
+from typing import TYPE_CHECKING
 
 from voiceclipper.boundaries import clip_boundaries
 from voiceclipper.detector import PhraseMatch
+from voiceclipper.ffmpeg_io import export_clip_ffmpeg, probe_duration_ms
+from voiceclipper.manifest import ClipEntry, clip_filename
 from voiceclipper.transcriber import TranscriptWord
 
+if TYPE_CHECKING:
+    pass
 
-def _clip_filename(phrase_id: str, occurrence_index: int) -> str:
-    if occurrence_index == 0:
-        return f"{phrase_id}.wav"
-    return f"{phrase_id}{occurrence_index}.wav"
+
+@dataclass(frozen=True)
+class ExportedClip:
+    entry: ClipEntry
+    output_path: Path
 
 
 def export_clips(
     audio_path: Path,
     words: list[TranscriptWord],
     matches: list[PhraseMatch],
-    output_dir: Path,
-) -> list[Path]:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    audio = AudioSegment.from_file(audio_path)
-    audio_length_ms = len(audio)
+    clips_dir: Path,
+    session_id: str,
+) -> list[ExportedClip]:
+    clips_dir.mkdir(parents=True, exist_ok=True)
+    audio_length_ms = probe_duration_ms(audio_path)
 
-    exported: list[Path] = []
+    exported: list[ExportedClip] = []
     occurrence_counts: dict[str, int] = {}
 
-    for match in matches:
+    for sequence, match in enumerate(matches, start=1):
         clip_start, clip_end = clip_boundaries(
             words,
             match.start_word_index,
@@ -36,13 +41,27 @@ def export_clips(
             match.phrase.padding_ms,
             audio_length_ms=audio_length_ms,
         )
-        clip = audio[clip_start:clip_end]
 
         occurrence_index = occurrence_counts.get(match.phrase.id, 0)
         occurrence_counts[match.phrase.id] = occurrence_index + 1
+        filename = clip_filename(match.phrase.id, occurrence_index)
+        output_path = clips_dir / filename
 
-        destination = output_dir / _clip_filename(match.phrase.id, occurrence_index)
-        clip.export(destination, format="wav")
-        exported.append(destination)
+        export_clip_ffmpeg(audio_path, output_path, clip_start, clip_end)
+
+        entry = ClipEntry(
+            clip_id=f"{session_id}_{sequence:06d}",
+            phrase_id=match.phrase.id,
+            occurrence_index=occurrence_index,
+            filename=filename,
+            path=f"clips/{filename}",
+            matched_text=match.matched_text,
+            start_ms=clip_start,
+            end_ms=clip_end,
+            duration_ms=clip_end - clip_start,
+            word_start_index=match.start_word_index,
+            word_end_index=match.end_word_index,
+        )
+        exported.append(ExportedClip(entry=entry, output_path=output_path))
 
     return exported

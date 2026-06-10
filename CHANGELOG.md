@@ -10,8 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 
 - Fuzzy matching and confidence thresholds
-- Batch processing for multiple source files
+- Chunked transcription for very long single files
 - Optional speaker diarization before clipping
+
+## [0.3.0] - 2026-06-10
+
+### Added
+
+- Session-scoped output directories with `clips/`, `manifest.json`, and `transcript.words.json`.
+- Manifest schema v1 for downstream corpus tooling (stable `clip_id`, source/phrases hashes, per-clip metadata).
+- `voiceclipper batch` for processing directories of recordings with `--skip-existing`, `--fail-fast`, and `--index`.
+- `--session-id`, `--manifest-only`, and backward-compatible `voiceclipper file.mp3` shorthand.
+- ffmpeg-based clip export to avoid loading entire recordings into RAM.
+- Transcript cache for fast re-clipping when `phrases.yaml` changes.
+
+### Changed
+
+- Default output is now `output/<session_id>/clips/` instead of a flat `output/` folder.
 
 ## [0.2.0] - 2026-06-10
 

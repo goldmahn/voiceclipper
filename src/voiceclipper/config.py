@@ -17,10 +17,14 @@ class PhraseTarget:
 class ClipJob:
     input_path: Path
     output_dir: Path
+    phrases_path: Path
     phrases: list[PhraseTarget]
+    session_id: str | None = None
     whisper_model: str = "base"
     device: str = "cpu"
     compute_type: str = "int8"
+    write_manifest: bool = True
+    manifest_only: bool = False
 
 
 def load_phrases(path: Path) -> list[PhraseTarget]:
