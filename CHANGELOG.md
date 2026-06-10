@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Chunked transcription for very long single files
 - Optional speaker diarization before clipping
 
+## [0.4.0] - 2026-06-10
+
+### Added
+
+- Automatic post-processing pipeline: VoiceClipper now invokes **LUFS Buff** and **Corpus Finisher** after clip export.
+- Session outputs include `normalized_clips/`, `training_clips/`, and `reports/` with QC summaries.
+- CLI flags: `--no-postprocess`, `--target-lufs`, `--pad`, `--fade`.
+- Environment overrides: `LUFS_BUFF_CLI`, `CORPUS_FINISHER_CLI`.
+
 ## [0.3.0] - 2026-06-10
 
 ### Added

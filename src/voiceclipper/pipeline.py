@@ -16,6 +16,7 @@ from voiceclipper.transcript_cache import (
     save_transcript_cache,
     transcript_cache_path,
 )
+from voiceclipper.postprocess import PostProcessResult, run_postprocess
 from voiceclipper.util import sanitize_session_id
 
 
@@ -38,6 +39,7 @@ class PipelineResult:
     clips: list[ClipResult]
     missing_phrase_ids: list[str]
     skipped: bool = False
+    postprocess: PostProcessResult | None = None
 
 
 def resolve_session_paths(job: ClipJob) -> tuple[str, Path, Path]:
@@ -101,6 +103,17 @@ def run_clip_job(job: ClipJob, *, model: WhisperModel | None = None) -> Pipeline
     if job.write_manifest:
         write_manifest(manifest_path, manifest)
 
+    postprocess: PostProcessResult | None = None
+    if job.run_postprocess and clips:
+        postprocess = run_postprocess(
+            session_dir,
+            clips_dir,
+            target_lufs=job.target_lufs,
+            leading_pad_ms=job.leading_pad_ms,
+            trailing_pad_ms=job.trailing_pad_ms,
+            fade_ms=job.fade_ms,
+        )
+
     return PipelineResult(
         session_id=session_id,
         session_dir=session_dir,
@@ -109,4 +122,5 @@ def run_clip_job(job: ClipJob, *, model: WhisperModel | None = None) -> Pipeline
         matches=matches,
         clips=clips,
         missing_phrase_ids=missing,
+        postprocess=postprocess,
     )

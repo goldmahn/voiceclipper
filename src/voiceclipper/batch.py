@@ -57,6 +57,11 @@ def run_batch(
     fail_fast: bool = False,
     index_path: Path | None = None,
     manifest_only: bool = False,
+    run_postprocess: bool = True,
+    target_lufs: float = -23.0,
+    leading_pad_ms: int = 75,
+    trailing_pad_ms: int = 75,
+    fade_ms: int = 3,
 ) -> BatchResult:
     if not input_dir.is_dir():
         raise NotADirectoryError(f"Batch input is not a directory: {input_dir}")
@@ -99,6 +104,11 @@ def run_batch(
             device=device,
             compute_type=compute_type,
             manifest_only=manifest_only,
+            run_postprocess=run_postprocess,
+            target_lufs=target_lufs,
+            leading_pad_ms=leading_pad_ms,
+            trailing_pad_ms=trailing_pad_ms,
+            fade_ms=fade_ms,
         )
 
         try:

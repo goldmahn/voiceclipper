@@ -25,6 +25,11 @@ class ClipJob:
     compute_type: str = "int8"
     write_manifest: bool = True
     manifest_only: bool = False
+    run_postprocess: bool = True
+    target_lufs: float = -23.0
+    leading_pad_ms: int = 75
+    trailing_pad_ms: int = 75
+    fade_ms: int = 3
 
 
 def load_phrases(path: Path) -> list[PhraseTarget]:
