@@ -13,8 +13,8 @@ venv/
 .mypy_cache/
 output/
 corpus/
-samples/*
-!samples/.gitkeep
+samples - START HERE/*
+!samples - START HERE/.gitkeep
 phrases.yaml
 *.wav
 !tests/fixtures/*.wav

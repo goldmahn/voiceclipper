@@ -20,8 +20,8 @@ def _add_shared_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("output"),
-        help="Directory for session output (default: output)",
+        default=Path("corpus/sessions"),
+        help="Directory for session output (default: corpus/sessions)",
     )
     parser.add_argument(
         "--model",

@@ -43,18 +43,28 @@ cp phrases.example.yaml phrases.yaml
 
 ## Usage
 
+### Where things go
+
+| Folder | Purpose |
+|--------|---------|
+| **`samples - START HERE/`** | Drop your source recording here (`.m4a`, `.mp3`, `.wav`, …) |
+| **`corpus/sessions/`** | Pipeline output — created automatically; one subfolder per session |
+
+You do **not** need an `output/` or `recordings/` folder. Those were leftovers from older defaults or examples.
+
 ### Single recording
 
 ```bash
-voiceclipper clip recordings/session_001.mp3 \
-  --phrases phrases.yaml \
-  --output-dir corpus/sessions
+voiceclipper clip "samples - START HERE/your_recording.m4a" \
+  --phrases phrases.yaml
 ```
 
-Backward-compatible shorthand (same as `clip`):
+`--output-dir corpus/sessions` is the default. Explicit form:
 
 ```bash
-voiceclipper recordings/session_001.mp3 --phrases phrases.yaml --output-dir corpus/sessions
+voiceclipper clip "samples - START HERE/your_recording.m4a" \
+  --phrases phrases.yaml \
+  --output-dir corpus/sessions
 ```
 
 Output layout:
@@ -78,9 +88,8 @@ Repeated phrases are numbered: `who_sent_you.wav`, `who_sent_you1.wav`, …
 ### Batch (many recordings)
 
 ```bash
-voiceclipper batch recordings/ \
+voiceclipper batch "samples - START HERE/" \
   --phrases phrases.yaml \
-  --output-dir corpus/sessions \
   --skip-existing \
   --index corpus/index.jsonl
 ```
@@ -92,9 +101,8 @@ voiceclipper batch recordings/ \
 After editing `phrases.yaml`, re-clip using the cached transcript:
 
 ```bash
-voiceclipper clip recordings/session_001.mp3 \
+voiceclipper clip "samples - START HERE/session_001.mp3" \
   --phrases phrases.yaml \
-  --output-dir corpus/sessions \
   --manifest-only
 ```
 
@@ -127,9 +135,8 @@ Three layers are supported:
 ### Interactive metadata
 
 ```bash
-voiceclipper clip recordings/test.m4a \
+voiceclipper clip "samples - START HERE/test.m4a" \
   --phrases phrases.yaml \
-  --output-dir corpus/sessions \
   --interactive-metadata
 ```
 
@@ -138,9 +145,8 @@ voiceclipper clip recordings/test.m4a \
 Load speaker and session fields from a JSON file:
 
 ```bash
-voiceclipper clip recordings/test.m4a \
+voiceclipper clip "samples - START HERE/test.m4a" \
   --phrases phrases.yaml \
-  --output-dir corpus/sessions \
   --metadata metadata/example_session.json
 ```
 
